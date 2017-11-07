@@ -28,13 +28,12 @@
         <span>{{isStarted ? 'Stop' : 'Start'}}</span>
       </button>
       <button type="button"
-              class="btn"
-              (click)="wait()"
+              class="btn btn-warning"
+              (click)="wait($event)"
               [disabled]="!isStarted"
-              [ngClass]="isWaiting ? 'btn-info' : 'btn-warning'"
       >
-        <i class="fa" [ngClass]="isWaiting ? 'fa-pause-circle' : 'fa-pause'"></i>
-        <span>{{isWaiting ? 'Go' : 'Wait'}}</span>
+        <i class="fa fa-pause"></i>
+        <span>Wait</span>
       </button>
       <button type="button"
               class="btn btn-primary"

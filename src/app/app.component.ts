@@ -1,7 +1,9 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Observable } from 'rxjs/Observable';
 import 'rxjs/add/observable/interval';
+import 'rxjs/add/observable/fromEvent';
 import { Subscription } from 'rxjs/Subscription';
+import { Subject } from 'rxjs/Subject';
 
 @Component({
   selector: 'app-root',
@@ -12,7 +14,7 @@ import { Subscription } from 'rxjs/Subscription';
 export class AppComponent implements OnInit, OnDestroy {
   public title: string;
   public isStarted: boolean;
-  public isWaiting: boolean;
+  public isWaiting: boolean; // needed for skipping single click-event('Wait')
   public currentTime: string;
 
   public timer: {
@@ -22,6 +24,9 @@ export class AppComponent implements OnInit, OnDestroy {
 
   private _currentTimeSub: Subscription;
   private _timerSub: Subscription;
+
+  private _waitClick = new Subject();
+  private _waitSub: Subscription;
 
   constructor() {
     this.title = 'test timer app';
@@ -37,6 +42,7 @@ export class AppComponent implements OnInit, OnDestroy {
   public ngOnDestroy() {
     this._currentTimeSub && this._currentTimeSub.unsubscribe();
     this._timerSub && this._timerSub.unsubscribe();
+    this._waitSub && this._waitSub.unsubscribe();
   }
 
   private subscribe() {
@@ -44,6 +50,13 @@ export class AppComponent implements OnInit, OnDestroy {
       .interval(1000)
       .subscribe(() => {
         this.time();
+      });
+
+    this._waitSub = this._waitClick
+      .debounceTime(300)
+      .subscribe(e => {
+        this.start();
+        this.isWaiting = false;
       });
   }
 
@@ -80,19 +93,21 @@ export class AppComponent implements OnInit, OnDestroy {
     }
 
     this.isStarted = !this.isStarted;
-
-    this.isWaiting = false;
   }
 
-  public wait() {
-    console.log('wait');
+  /**
+   * When button's pressed frequently - it stopes time counting.
+   * But when it's not - it continue to count time
+   * 'isWaiting' helps to skip single click-event
+   * @param {Event} event
+   */
+  public wait(event: Event) {
     if (this.isWaiting) {
-      this.start();
-    } else {
       this._timerSub && this._timerSub.unsubscribe();
+      this._waitClick.next(event);
+    } else {
+      this.isWaiting = true;
     }
-
-    this.isWaiting = !this.isWaiting;
   }
 
   /**
